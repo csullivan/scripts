@@ -15,10 +15,10 @@ import re
 import time
 
 
-ckz_bin = '/projects/ceclub/6Li6Li*/fold/working/ckz'
-wsaw_bin = '/projects/ceclub/6Li6Li*/fold/working/wsaw'
-fold_bin = '/projects/ceclub/6Li6Li*/fold/working/fold'
-dwhi_bin = '/projects/ceclub/6Li6Li*/fold/working/dwhi'
+ckz_bin = '/projects/ceclub/6Li6Li*/rxns_codes/working/ckz'
+wsaw_bin = '/projects/ceclub/6Li6Li*/rxns_codes/working/wsaw'
+fold_bin = '/projects/ceclub/6Li6Li*/rxns_codes/working/fold'
+dwhi_bin = '/projects/ceclub/6Li6Li*/rxns_codes/working/dwhi'
 
 is_64bits = sys.maxsize > 2**32
 
@@ -30,6 +30,7 @@ def deploy_payload(config_file,output_dir):
     config_file[1] = os.path.abspath(config_file[1])
     config_file[2] = os.path.abspath(config_file[2])
     config_file[3] = os.path.abspath(config_file[3])
+    output_dir = "results_"+output_dir
     if is_64bits:
         wsaw_command_1 = \
             'cd {output} && {bin} < {input} > {save}'.format(
@@ -67,6 +68,8 @@ def deploy_payload(config_file,output_dir):
     subprocess.call(wsaw_command_2,shell=True)
     subprocess.call(fold_command,shell=True)
     subprocess.call(dwhi_command,shell=True)
+    subprocess.call("mv *.out ./{output}/".format(output=output_dir),shell=True)
+
 
 def main():
     p = argparse.ArgumentParser()
@@ -95,7 +98,6 @@ def main():
     p = p.parse_args()
     if p.clean != None:
         subprocess.call("rm -rf *.out && rm -f ./*~",shell=True)
-        exit()
 
     #Pick a reasonable output folder if not given.
     if not p.output:
@@ -118,7 +120,12 @@ def main():
     inputs = [p.input_wsaw_1,p.input_wsaw_2,p.input_fold,p.input_dwhi]
     deploy_payload(inputs,p.output.replace('wsaw',''))
 
+
+def gnuplot():
+    proc = subprocess.Popen(['gnuplot'], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+    proc.stdin.write("set log y;plot './results_6li.out/6li.plot';set output;q;")
     
 
 if __name__=='__main__':    
     main()
+    gnuplot()
